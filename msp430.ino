@@ -7,14 +7,22 @@ double lastError2=0;
 unsigned long previousTime=0;
 double cumError=0; 
 double input;
-float setPoint = 2000;
+float setPoint = 0;
 
 void setup() {
-  pinMode(A0, OUTPUT); 
+  pinMode(A0, OUTPUT);
+  Serial.begin(9600); 
 }
 
 void loop() {
   input=analogRead(A3);
+    if (Serial.available() > 0) {
+        float serialValue=Serial.read();
+          if (serialValue>=0 && serialValue<=255) {
+            setPoint=serialValue;
+            setPoint=map(setPoint, 0, 255, 0, 4095);
+          }        
+    }
   out = computePID(input,setPoint,kp,ki,kd);  
   analogWrite(A0, out);   
   Serial.println(adcToVoltage(input,3.3,12));
