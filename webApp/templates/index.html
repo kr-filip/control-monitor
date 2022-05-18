@@ -9,36 +9,103 @@
       var namespace;
       var socket;
 
-      $('form#disconnect').submit(function(event) {
+      $('#startStop').click(function(event) {
+          console.log($('#startStop').val());
+
+          if ($(this).val() == "start") {
+            $(this).val("stop");
+            $(this).text("Stop");
+          }
+          else {
+            $(this).val("start");
+            $(this).text("Start");
+          }
+          return false; }); 
+          
+      $('#closeButton').click(function(event) {
           socket.emit('disconnect_request');
-          return false; });        
-          $('#buttonValOpen').click(function(event) {
-          //console.log($('#buttonVal').val());
-          namespace = '/test';
-          socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);        
-          socket.on('connect', function() {
-          socket.emit('my_event', {data: 'Client connected'}); });        
-          socket.on('my_response', function(msg) {
-          console.log(msg.data);
-          $('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html(); });
-          return false; });           
+          return false; }); 
+          
+      $('#openClose').click(function(event) {
+        console.log($('#openClose').val());
+        if ($(this).val() == "open") {
+              $(this).val("close");
+              $(this).text("Close");
+            }
+            else {
+              $(this).val("open");
+              $(this).text("Open");
+            }
+          
+      namespace = '/test';
+      socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+      
+      socket.on('connect', function() {
+      socket.emit('my_event', {data: 'Client connected'});
       });
+      
+      socket.on('my_response', function(msg) {
+      console.log(msg.data);
+      $('#serialId').append(msg.count+'<br>').html();
+      $('#serialValue').append(msg.data+'<br>').html();     
+      return false; }); 
+    });
+});
+      
     </script>
+
+    <style>
+      .tableFixHead {
+        overflow-y: auto;
+        height: 106px;
+      }
+      .tableFixHead thead th {
+        position: sticky;
+        top: 0;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      th,
+      td {
+        padding: 8px 16px;
+        border: 1px solid #ccc;
+      }
+      th {
+        background: #eee;
+      }
+    </style>
+
  </head>
  <body>
   <h1>Capacitor voltage control and monitoring</h1>
   <h2>Send:</h2>
-  <form id="emit" method="POST" action='#'>
-    <input type="text" name="emit_value" id="emit_value" placeholder="Amplituda">
-    <input type="submit" value="Echo">
+  <form id="emit" method="POST" action="#">
+    <input type="text" name="emit_value" id="emit_value" placeholder="Type voltage in range 0-3.3">
+    <input type="submit" value="Set Voltage">
   </form>
-  <button id="buttonVal" type="submit" value="start">Start</button>
-  <button id="buttonValStop" type="submit" value="stop">Stop</button>
-  <form id="disconnect" method="POST" action="#">
-    <button id="buttonValOpen" type="submit" value="open">Open</button>
-    <input type="submit" value="Close">
+  <button id="startStop" type="submit" value="start">Start</button>
+  <form id="connector" method="GET" action="#" >
+    <button id="openClose" type="submit" value="open">Open</button>
   </form> 
   <h2>Receive:</h2>
-  <div id="log"></div>
+
+ <div class="tableFixHead">
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Voltage (volts)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="serialId"></td>
+            <td id="serialValue"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
  </body>
 </html>
