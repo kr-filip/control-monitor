@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>Flask-SocketIO Test</title>
+   <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.min.js"></script>
+   <script type="text/javascript" charset="utf-8">
+     $(document).ready(function() {
+      var namespace;
+      var socket;
+
+      $('form#disconnect').submit(function(event) {
+          socket.emit('disconnect_request');
+          return false; });        
+          $('#buttonValOpen').click(function(event) {
+          //console.log($('#buttonVal').val());
+          namespace = '/test';
+          socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);        
+          socket.on('connect', function() {
+          socket.emit('my_event', {data: 'Client connected'}); });        
+          socket.on('my_response', function(msg) {
+          console.log(msg.data);
+          $('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html(); });
+          return false; });           
+      });
+    </script>
+ </head>
+ <body>
+  <h1>Capacitor voltage control and monitoring</h1>
+  <h2>Send:</h2>
+  <form id="emit" method="POST" action='#'>
+    <input type="text" name="emit_value" id="emit_value" placeholder="Amplituda">
+    <input type="submit" value="Echo">
+  </form>
+  <button id="buttonVal" type="submit" value="start">Start</button>
+  <button id="buttonValStop" type="submit" value="stop">Stop</button>
+  <form id="disconnect" method="POST" action="#">
+    <button id="buttonValOpen" type="submit" value="open">Open</button>
+    <input type="submit" value="Close">
+  </form> 
+  <h2>Receive:</h2>
+  <div id="log"></div>
+ </body>
+</html>
