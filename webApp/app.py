@@ -15,6 +15,7 @@ def background_thread(args):
     count = 0  
     dataCounter = 0
     dataList = []
+    timestamp=0
     ser = serial.Serial(
     port='/dev/ttyS0',
     baudrate =9600,
@@ -33,11 +34,13 @@ def background_thread(args):
         socketio.sleep(2)
         count += 1
         dataCounter +=1
+        timeStamp=time.asctime(time.localtime(time.time()))
+        ser.flushInput()
         serialData=float(ser.readline())
 #  
         socketio.emit('my_response',
-                      {'data': serialData, 'count': time.asctime(time.localtime(time.time()))},
-                      namespace='/test')  
+                      {'data': serialData, 'count': count, 'timeStamp': timeStamp},
+                      namespace='/test')   
 
 @app.route('/')
 def index():
