@@ -15,16 +15,28 @@ void setup() {
 
 void loop() {
   input=analogRead(A3); // reading capacitor voltage
-    if (Serial.available() > 0) {                       //reading incoming serial data, range 0-255
-        float serialValue=Serial.read();
-          if (serialValue>=0 && serialValue<=255) {
-            setPoint=serialValue;
-            setPoint=map(setPoint, 0, 255, 0, 4095);
-          }                                            //-------------------------------------------
-    }
+//    if (Serial.available() > 0) {                       //reading incoming serial data, range 0-255
+//        float serialValue=Serial.read();
+//          if (serialValue>=0 && serialValue<=255) {
+//            setPoint=serialValue;
+//            setPoint=map(setPoint, 0, 255, 0, 4095);
+//          }                                            //-------------------------------------------
+//    }
+    
+  if (Serial.available()>0) {
+    Serial.flush();
+    int serialValue=Serial.readString().toInt();
+      
+    if (serialValue>=0 && serialValue<=3.3) {
+      setPoint=serialValue;
+      setPoint=map(setPoint, 0, 3.3, 0, 4095);
+          }
+  }
+  
   analogWrite(A0, computePID(input,setPoint,kp,ki,kd));  //write computed PID output value to pin 
-  Serial.println(adcToVoltage(input,3.3,12));            //send on serial ADC value in volts (capacitor voltage)
-  delay(1);
+  Serial.print(adcToVoltage(input,3.3,12),BIN);            //send on serial ADC value in volts (capacitor voltage)
+  Serial.flush();
+  //delay(1);
 }
 
 double adcToVoltage(double adcValue, float adcVoltage, float adcBits) {   //function that coverts ADC value to volts
