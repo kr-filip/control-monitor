@@ -2,11 +2,16 @@
 <html>
  <head>
   <title>Flask-SocketIO Test</title>
-   <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
-   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.min.js"></script>
-   <script src="static/libs/plotly-latest.min.js"></script>
-   <script src="static/libs/gauge.min.js"></script>
-   <script type="text/javascript" charset="utf-8">
+  <link rel="stylesheet" href="static/libs/bootstrap-4.6.1-dist/css/bootstrap.min.css">
+  <script src="static/libs/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="static/libs/bootstrap-4.6.1-dist/js/bootstrap.bundle.min.js"></script>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.min.js"></script>
+  <script src="static/libs/plotly-latest.min.js"></script>
+  <script src="static/libs/gauge.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script type="text/javascript" charset="utf-8">
+    
      $(document).ready(function() {
       var namespace;
       var socket;
@@ -17,45 +22,6 @@
       var layout;
       var maxid;
       
-      //var gauge = new RadialGauge({
-          //renderTo: 'canvasID',
-          //width: 300,
-          //height: 300,
-          //units: "Voltage (V)",
-          //minValue: 0,
-          //maxValue: 3.3,
-          //majorTicks: [
-          
-              //"0",
-              //"1",
-              //"2",
-              //"3.3",
-
-          //],
-          //minorTicks: 2,
-          //strokeTicks: true,
-          //highlights: [
-              //{
-                  //"from": 3,
-                  //"to": 3.3,
-                  //"color": "rgba(200, 50, 50, .75)"
-              //}
-          //],
-          //colorPlate: "#fff",
-          //borderShadowWidth: 0,
-          //borders: false,
-          //needleType: "arrow",
-          //needleWidth: 2,
-          //needleCircleSize: 7,
-          //needleCircleOuter: true,
-          //needleCircleInner: false,
-          //animationDuration: 1500,
-          //animationRule: "linear"
-      //});
-      
-      //gauge.draw();
-      
-      
       $('form#emit').submit(function(event) {
         if ($('#emit_value').val()>0 & $('#emit_value').val()<=maxid)
           {
@@ -65,19 +31,6 @@
         }
           return false; });
           
-      //$('#startStop').click(function(event) {
-          //console.log($('#startStop').val());
-          //socket.emit('db_event', {value: $('#startStop').val()});
-          //if ($(this).val() == "start") {
-            //$(this).val("stop");
-            //$(this).text("Stop");
-          //}
-          //else {
-            //$(this).val("start");
-            //$(this).text("Start");
-          //}
-          //return false; }); 
-          
       $('#closeButton').click(function(event) {
           socket.emit('disconnect_request');
           return false; }); 
@@ -85,6 +38,11 @@
       $('#liveDatabase').click(function(event) {
         console.log($('#liveDatabase').val());
         window.location.replace("/");
+        }); 
+        
+      $('#file').click(function(event) {
+        console.log($('#file').val());
+        window.location.replace("/file");
         }); 
           
       $('#openClose').click(function(event) {
@@ -143,25 +101,20 @@
               range: [0,3.3]
           }
         };
-        //console.log(trace);
         var traces = new Array();
         traces.push(trace);
         Plotly.newPlot($('#plotdiv')[0], traces, layout); 
-        //addTraces 
-      connected=true; 
-      gauge.value = msg.data;    
+
       return false; }); 
     });
 });
-      
     </script>
     
-
-
-    <style>
+   <style>
       .tableFixHead {
         overflow-y: auto;
         height: 106px;
+        margin-top: 30px;
       }
       .tableFixHead thead th {
         position: sticky;
@@ -179,35 +132,51 @@
       th {
         background: #eee;
       }
-    </style>
+      
+      body {
+  text-align: center;
+}
+      .head {
+        padding-top: 40px;
+        }
+        
+        .button {
+        margin-top: 10px;
+        }
+  
+  #canvasID {
+    margin-top: 50px;
+    }
+    
+  #plotdiv {
+    margin-top: 50px;
+    margin-left: 23%;
+    }
+
+</style>
 
  </head>
  <body>
+   <div class="container p-3 my-3 bg-dark text-white">
   <h1>Capacitor voltage control and monitoring</h1>
-  <h2>Send:</h2>
+  <div class="head">
   <form id="emit" method="POST" action="#">
     <input type="text" id="emit_value" placeholder="">
-    <input type="submit" value="Choose record">
+    <input type="submit" class="btn btn-success" value="Choose record">
   </form>
-<!--
-  <button id="startStop" type="submit" value="start">Start</button>
--->
   <form id="connector" method="GET" action="#" >
-    <button id="openClose" type="submit" value="open">Open</button>
-<!--
-    <button id="openButton" type="submit">Open</button>
-    <button id="closeButton" type="submit">Close</button>
--->
+    <button id="openClose" type="submit" class="button btn btn-success" value="open">Open</button>
   </form> 
-  <button id="liveDatabase" type="submit" value="database">Live</button>
-  <h2>Receive:</h2>
+  <button id="liveDatabase" type="submit" class="button btn btn-success" value="database">Live</button>
+  <button id="file" type="submit" class="button btn btn-success" value="file">File</button>
+  </div>
 
  <div class="tableFixHead">
       <table>
         <thead>
           <tr>
-            <th>Timestamp</th>
-            <th>Voltage (volts)</th>
+            <th class="text-black-50">Timestamp</th>
+            <th class="text-black-50">Voltage (volts)</th>
           </tr>
         </thead>
         <tbody>
@@ -218,10 +187,7 @@
         </tbody>
       </table>
     </div>
-    
-<!--
-<canvas id="canvasID"></canvas>
--->
 <div id="plotdiv" style="width:600px;height:250px;"></div>
+</div>
  </body>
 </html>

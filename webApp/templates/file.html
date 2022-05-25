@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
  <head>
-  <title>Flask-SocketIO Test</title> 
+  <title>Flask-SocketIO Test</title>
   <link rel="stylesheet" href="static/libs/bootstrap-4.6.1-dist/css/bootstrap.min.css">
   <script src="static/libs/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
@@ -11,7 +11,7 @@
   <script src="static/libs/gauge.min.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script type="text/javascript" charset="utf-8">
-  
+    
      $(document).ready(function() {
       var namespace;
       var socket;
@@ -20,76 +20,29 @@
       var y = new Array();
       var trace;
       var layout;
-      
-      var gauge = new RadialGauge({
-          renderTo: 'canvasID',
-          width: 300,
-          height: 300,
-          units: "Voltage (V)",
-          minValue: 0,
-          maxValue: 3.3,
-          majorTicks: [
-          
-              "0",
-              "1",
-              "2",
-              "3.3",
-
-          ],
-          minorTicks: 2,
-          strokeTicks: true,
-          highlights: [
-              {
-                  "from": 3,
-                  "to": 3.3,
-                  "color": "rgba(200, 50, 50, .75)"
-              }
-          ],
-          colorPlate: "#fff",
-          borderShadowWidth: 0,
-          borders: false,
-          needleType: "arrow",
-          needleWidth: 2,
-          needleCircleSize: 7,
-          needleCircleOuter: true,
-          needleCircleInner: false,
-          animationDuration: 1500,
-          animationRule: "linear"
-      });
-      
-      gauge.draw();
-      
+      var maxid;
       
       $('form#emit').submit(function(event) {
-          socket.emit('my_event2', {controlValue: $('#emit_value').val()});
+        if ($('#emit_value').val()>0 & $('#emit_value').val()<=maxid)
+          {
+          socket.emit('file_read', {idNumber: $('#emit_value').val()});
           console.log($('#emit_value').val());
+          //maxid=$('#emit_value').val();
+        }
           return false; });
-          
-      $('#startStop').click(function(event) {
-          console.log($('#startStop').val());
-          socket.emit('db_event', {value: $('#startStop').val()});
-          if ($(this).val() == "start") {
-            $(this).val("stop");
-            $(this).text("Stop");
-          }
-          else {
-            $(this).val("start");
-            $(this).text("Start");
-          }
-          return false; }); 
           
       $('#closeButton').click(function(event) {
           socket.emit('disconnect_request');
           return false; }); 
           
-      $('#liveDatabase').click(function(event) {
-        console.log($('#liveDatabase').val());
-        window.location.replace("/database");
+      $('#live').click(function(event) {
+        console.log($('#live').val());
+        window.location.replace("/");
         }); 
         
-      $('#file').click(function(event) {
-        console.log($('#file').val());
-        window.location.replace("/file");
+      $('#database').click(function(event) {
+        console.log($('#database').val());
+        window.location.replace("/database");
         }); 
           
       $('#openClose').click(function(event) {
@@ -113,10 +66,27 @@
       socket.on('my_response', function(msg) {
       console.log(msg.data);
       //$('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html();
-      $('#serialId').append(msg.timeStamp+'<br>').html();
-      $('#serialValue').append(msg.data+'<br>').html();
-      x.push(parseFloat(msg.count));
-        y.push(parseFloat(msg.data));
+      maxid=msg.maxId;
+      $("#emit_value").attr("placeholder", "Range 0 - "+maxid);
+   
+      return false; }); 
+
+      socket.on('my_response2', function(msg) {
+      console.log(msg.data);
+      //$('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html();
+      let i=0;
+      const obj =JSON.parse(msg.data);
+      obj.forEach(myFunction);
+      
+      function myFunction()
+      {
+      $('#serialId').append(obj[i].time+'<br>').html();
+      $('#serialValue').append(obj[i].controlValue+'<br>').html();
+      x.push(parseFloat(msg.count+i));
+      y.push(parseFloat(obj[i].controlValue));
+      i+=1
+    }
+      
         trace = {
             x: x,
             y: y,
@@ -134,16 +104,14 @@
         var traces = new Array();
         traces.push(trace);
         Plotly.newPlot($('#plotdiv')[0], traces, layout); 
-        //addTraces 
-      connected=true; 
-      gauge.value = msg.data;    
+         
       return false; }); 
     });
 });
       
-</script>
-
-<style>
+    </script>
+    
+    <style>
       .tableFixHead {
         overflow-y: auto;
         height: 106px;
@@ -177,10 +145,6 @@
         margin-top: 10px;
         }
   
-  #canvasID {
-    margin-top: 50px;
-    }
-    
   #plotdiv {
     margin-top: 50px;
     margin-left: 23%;
@@ -194,16 +158,16 @@
   <h1>Capacitor voltage control and monitoring</h1>
   <div class="head">
   <form id="emit" method="POST" action="#">
-    <input type="text" id="emit_value" placeholder="Range 0 - 3.3">
-    <input type="submit" value="Set Voltage" class="btn btn-success">
+    <input type="text" id="emit_value" placeholder="">
+    <input type="submit" class="btn btn-success" value="Choose record">
   </form>
-  <button id="startStop" type="submit" class="button btn btn-success" value="start">Start</button>
   <form id="connector" method="GET" action="#" >
-    <button id="openClose" type="submit" class="button btn btn-success" value="open">Open</button>
+    <button id="openClose" class="button btn btn-success" type="submit" value="open">Open</button>
   </form> 
-  <button id="liveDatabase" type="submit" class="button btn btn-success" value="database">Database</button>
-  <button id="file" type="submit" class="button btn btn-success" value="file">File</button>
+  <button id="live" type="submit" class="button btn btn-success" value="live">Live</button>
+  <button id="database" type="submit" class="button btn btn-success" value="database">Database</button>
   </div>
+
  <div class="tableFixHead">
       <table>
         <thead>
@@ -220,8 +184,6 @@
         </tbody>
       </table>
     </div>
-    
-<canvas id="canvasID"></canvas>
 <div id="plotdiv" style="width:600px;height:250px;"></div>
 </div>
  </body>
