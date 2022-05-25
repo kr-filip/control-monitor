@@ -1,0 +1,227 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>Flask-SocketIO Test</title>
+   <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.min.js"></script>
+   <script src="static/libs/plotly-latest.min.js"></script>
+   <script src="static/libs/gauge.min.js"></script>
+   <script type="text/javascript" charset="utf-8">
+     $(document).ready(function() {
+      var namespace;
+      var socket;
+      var conected=false;
+      var x = new Array();
+      var y = new Array();
+      var trace;
+      var layout;
+      var maxid;
+      
+      //var gauge = new RadialGauge({
+          //renderTo: 'canvasID',
+          //width: 300,
+          //height: 300,
+          //units: "Voltage (V)",
+          //minValue: 0,
+          //maxValue: 3.3,
+          //majorTicks: [
+          
+              //"0",
+              //"1",
+              //"2",
+              //"3.3",
+
+          //],
+          //minorTicks: 2,
+          //strokeTicks: true,
+          //highlights: [
+              //{
+                  //"from": 3,
+                  //"to": 3.3,
+                  //"color": "rgba(200, 50, 50, .75)"
+              //}
+          //],
+          //colorPlate: "#fff",
+          //borderShadowWidth: 0,
+          //borders: false,
+          //needleType: "arrow",
+          //needleWidth: 2,
+          //needleCircleSize: 7,
+          //needleCircleOuter: true,
+          //needleCircleInner: false,
+          //animationDuration: 1500,
+          //animationRule: "linear"
+      //});
+      
+      //gauge.draw();
+      
+      
+      $('form#emit').submit(function(event) {
+        if ($('#emit_value').val()>0 & $('#emit_value').val()<=maxid)
+          {
+          socket.emit('db_read', {idNumber: $('#emit_value').val()});
+          console.log($('#emit_value').val());
+          //maxid=$('#emit_value').val();
+        }
+          return false; });
+          
+      //$('#startStop').click(function(event) {
+          //console.log($('#startStop').val());
+          //socket.emit('db_event', {value: $('#startStop').val()});
+          //if ($(this).val() == "start") {
+            //$(this).val("stop");
+            //$(this).text("Stop");
+          //}
+          //else {
+            //$(this).val("start");
+            //$(this).text("Start");
+          //}
+          //return false; }); 
+          
+      $('#closeButton').click(function(event) {
+          socket.emit('disconnect_request');
+          return false; }); 
+          
+      $('#liveDatabase').click(function(event) {
+        console.log($('#liveDatabase').val());
+        window.location.replace("/");
+        }); 
+          
+      $('#openClose').click(function(event) {
+        console.log($('#openClose').val());
+        if ($(this).val() == "open") {
+              $(this).val("close");
+              $(this).text("Close");
+            }
+            else {
+              $(this).val("open");
+              $(this).text("Open");
+            }
+            
+      namespace = '/test';
+      socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+      
+      socket.on('connect', function() {
+      socket.emit('my_event', {data: 'Client connected'});
+      });
+      
+      socket.on('my_response', function(msg) {
+      console.log(msg.data);
+      //$('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html();
+      maxid=msg.maxId;
+      $("#emit_value").attr("placeholder", "Range 0 - "+maxid);
+   
+      return false; }); 
+
+      
+      socket.on('my_response2', function(msg) {
+      console.log(msg.data);
+      //$('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html();
+      let i=0;
+      const obj =JSON.parse(msg.data);
+      obj.forEach(myFunction);
+      
+      function myFunction()
+      {
+      $('#serialId').append(obj[i].time+'<br>').html();
+      $('#serialValue').append(obj[i].controlValue+'<br>').html();
+      x.push(parseFloat(msg.count+i));
+      y.push(parseFloat(obj[i].controlValue));
+      i+=1
+    }
+      
+        trace = {
+            x: x,
+            y: y,
+        };       
+        layout = {
+          xaxis: {
+              title: 'time',
+          },
+          yaxis: {
+              title: 'Voltage (V)',
+              range: [0,3.3]
+          }
+        };
+        //console.log(trace);
+        var traces = new Array();
+        traces.push(trace);
+        Plotly.newPlot($('#plotdiv')[0], traces, layout); 
+        //addTraces 
+      connected=true; 
+      gauge.value = msg.data;    
+      return false; }); 
+    });
+});
+      
+    </script>
+    
+
+
+    <style>
+      .tableFixHead {
+        overflow-y: auto;
+        height: 106px;
+      }
+      .tableFixHead thead th {
+        position: sticky;
+        top: 0;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      th,
+      td {
+        padding: 8px 16px;
+        border: 1px solid #ccc;
+      }
+      th {
+        background: #eee;
+      }
+    </style>
+
+ </head>
+ <body>
+  <h1>Capacitor voltage control and monitoring</h1>
+  <h2>Send:</h2>
+  <form id="emit" method="POST" action="#">
+    <input type="text" id="emit_value" placeholder="">
+    <input type="submit" value="Choose record">
+  </form>
+<!--
+  <button id="startStop" type="submit" value="start">Start</button>
+-->
+  <form id="connector" method="GET" action="#" >
+    <button id="openClose" type="submit" value="open">Open</button>
+<!--
+    <button id="openButton" type="submit">Open</button>
+    <button id="closeButton" type="submit">Close</button>
+-->
+  </form> 
+  <button id="liveDatabase" type="submit" value="database">Live</button>
+  <h2>Receive:</h2>
+
+ <div class="tableFixHead">
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Voltage (volts)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="serialId"></td>
+            <td id="serialValue"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+<!--
+<canvas id="canvasID"></canvas>
+-->
+<div id="plotdiv" style="width:600px;height:250px;"></div>
+ </body>
+</html>

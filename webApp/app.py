@@ -15,8 +15,17 @@ def background_thread(args):
     count = 0  
     dataCounter = 0
     dataList = []
+    controlValueList=[]
+    timestampList=[]
     timestamp=0
     controlValue=0
+    db_value = ""
+    db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
+    cursor = db.cursor()
+    cursor.execute("SELECT MAX(id) FROM projekt")
+    maxid = cursor.fetchone()
+    db.close()
+    idNumber=maxid
     ser = serial.Serial(
     port='/dev/ttyS0',
     baudrate =9600,
@@ -29,12 +38,13 @@ def background_thread(args):
         if args:
           A = dict(args).get('A')
           controlValue=dict(args).get('controlValue')
-          #dbV = dict(args).get('db_value')
+          db_value=dict(args).get('db_value')
         else:
           controlValue=0
-          A = 1
-          dbV = 'nieco'  
-        print(A)
+          A = 0
+          db_value = ''
+          idNumber=str(maxid) 
+        #print(A)
         #print(dbV) 
         #print(args)  
         socketio.sleep(2)
@@ -58,9 +68,32 @@ def background_thread(args):
             print(bytes(controlValue,'utf-8'))
             print(type(controlValue) == type('str'))
 
+        if db_value == 'start':
+            dataDict = {
+            "time": timeStamp,
+            "controlValue": controlValue,
+            }         
+            dataList.append(dataDict)
+
+        else:
+          if len(dataList)>0:
+            dataString = str(dataList).replace("'", "\"")
+            dataString=str(dataString)         
+            cursor = db.cursor()
+            cursor.execute("SELECT MAX(id) FROM projekt")
+            maxid = cursor.fetchone()
+            cursor.execute("INSERT INTO projekt (id, data) VALUES (%s, %s)", (maxid[0] + 1, dataString))
+            db.commit()
+            dataList = []
+            controlValueList=[]
+            timestampList=[]
+            dataCounter = 0
+            db.close()
+            
         socketio.emit('my_response',
-                      {'data': serialData, 'count': count, 'timeStamp': timeStamp},
-                      namespace='/test')   
+                      {'data': serialData, 'count': count, 'timeStamp': timeStamp, 'maxId':maxid},
+                      namespace='/test')  
+         
 
 @app.route('/')
 def index():
@@ -76,7 +109,31 @@ def test_message(message):
 def test_message2(message):   
     session['receive_count'] = session.get('receive_count', 0) + 1 
     session['controlValue'] = message['controlValue'] 
+
+@app.route('/database', methods=['GET', 'POST'])
+def graph():
+    return render_template('database.html', async_mode=socketio.async_mode)
+
+@socketio.on('db_read', namespace='/test')
+def db_message(message):   
+    session['idNumber']=message["idNumber"]
+    print(session['idNumber'])
+    db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
+    cursor = db.cursor()
+    cursor.execute("SELECT  data FROM  projekt WHERE id=%s",session.get('idNumber'))
+    rv = cursor.fetchall()
+    db.close()
     
+    socketio.emit('my_response2',
+                  {'data': rv, 'count': session.get('count', 0), 'timeStamp': 1, 'maxId': session.get('maxid')},
+                  namespace='/test')
+   
+@socketio.on('db_event', namespace='/test')
+def db_message2(message):   
+    session['receive_count'] = session.get('receive_count', 0) + 1 
+    session['db_value'] = message['value']
+    print(session['db_value'])
+
 @socketio.on('disconnect_request', namespace='/test')
 def disconnect_request():
     session['receive_count'] = session.get('receive_count', 0) + 1

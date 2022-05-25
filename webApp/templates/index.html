@@ -68,6 +68,11 @@
       $('#closeButton').click(function(event) {
           socket.emit('disconnect_request');
           return false; }); 
+
+      $('#liveDatabase').click(function(event) {
+          console.log($('#liveDatabase').val());
+          window.location.replace("/database");
+        });
           
       $('#openClose').click(function(event) {
         console.log($('#openClose').val());
@@ -152,6 +157,7 @@
   <form id="connector" method="GET" action="#" >
     <button id="openClose" type="submit" value="open">Open</button>
   </form> 
+  <button id="liveDatabase" type="submit" value="database">Database</button>
   <h2>Receive:</h2>
 
  <div class="tableFixHead">
