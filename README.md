@@ -9,3 +9,5 @@ This project is about controlling and monitoring capacitor voltage via web app. 
 - MariaDB database
 - Raspberry pi os or linux equivalent
 
+# Web API
+![](https://user-images.githubusercontent.com/105446511/170385906-b48ee080-b89c-4ac6-99a5-d408c3621172.png)
